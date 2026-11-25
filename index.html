@@ -6,14 +6,14 @@
 <meta name="theme-color" content="#2b2233">
 <meta property="og:type" content="website">
 <meta property="og:title" content="속풀이 한 판">
-<meta property="og:description" content="패버리고 싶은 그 녀석을 만들어서 속 시원하게 한 판!">
+<meta property="og:description" content="혼내주고 싶은 그 녀석을 만들어서 속 시원하게 한 판!">
 <meta property="og:image" content="https://kihfbi.github.io/sokpuri/og.png">
 <meta property="og:image:width" content="1200">
 <meta property="og:image:height" content="630">
 <meta property="og:url" content="https://kihfbi.github.io/sokpuri/">
 <meta name="twitter:card" content="summary_large_image">
 <meta name="twitter:image" content="https://kihfbi.github.io/sokpuri/og.png">
-<meta name="description" content="패버리고 싶은 그 녀석을 만들어서 속 시원하게 한 판!">
+<meta name="description" content="혼내주고 싶은 그 녀석을 만들어서 속 시원하게 한 판!">
 <meta name="robots" content="noindex,nofollow">
 <link rel="manifest" href="manifest.webmanifest">
 <link rel="icon" href="icon-192.png">
@@ -284,7 +284,7 @@
     <div class="tlogo">
       <div class="main" data-t="속풀이"><span>속풀이</span></div>
       <div class="ribbon">한 판!</div>
-      <div class="tag">패버리고 싶은 그 녀석, 오늘 소환한다</div>
+      <div class="tag">혼내주고 싶은 그 녀석, 오늘 소환한다</div>
       <span class="spk" style="left:8%;top:10%;animation-delay:0s">✦</span>
       <span class="spk" style="left:86%;top:4%;animation-delay:0.7s">✦</span>
       <span class="spk" style="left:94%;top:52%;animation-delay:1.3s">✦</span>
@@ -293,14 +293,14 @@
       <span class="spk" style="left:24%;top:92%;animation-delay:1.1s">✦</span>
     </div>
     <div class="tpanel">
-      <label for="nameIn" class="q">패버리고 싶은 사람은 누구인가요?</label>
+      <label for="nameIn" class="q">혼내주고 싶은 사람은 누구인가요?</label>
       <input id="nameIn" type="text" maxlength="8" placeholder="이름 (최대 8자)" autocomplete="off" enterkeyhint="go">
       <div id="nameErr" class="err">&nbsp;</div>
       <button id="btnStart" class="kbtn go">시작</button>
       <button id="btnRedo" class="kbtn wood hidden">그 녀석 다시 부르기</button>
       <p class="small">"시작"을 누르면 소리가 켜져요 · 폰은 가로로 돌리면 더 크게 보여요</p>
     </div>
-    <div class="ver">v0.6.0 beta &nbsp;·&nbsp; build <span id="buildId">20261126-0047</span> &nbsp;·&nbsp; &copy; SY INHOVATION</div>
+    <div class="ver">v0.6.0 beta &nbsp;·&nbsp; build <span id="buildId">20261126-0048</span> &nbsp;·&nbsp; &copy; SY INHOVATION</div>
   </div>
 
   <div id="photoOv" class="ov hidden" style="z-index:65;background:rgba(20,10,35,0.72)">
@@ -317,7 +317,7 @@
   <div id="makeOv" class="ov side hidden">
     <div class="card wide">
       <h2>어떻게 생겼어요??</h2>
-      <p class="small" id="mkSub">때려 주고 싶은 그 녀석을 닮게 골라 보세요.</p>
+      <p class="small" id="mkSub">혼내주고 싶은 그 녀석을 닮게 골라 보세요.</p>
       <input type="file" id="photoFile" accept="image/*" hidden>
       <div class="two">
         <button id="btnRand">랜덤생성</button>
@@ -3276,7 +3276,7 @@ $('btnSummon').addEventListener('click', () => {            // 불러내기 → 
 });
 
 /* 시작 */
-function startGame() {                                   // 시작: 패버리고 싶은 사람의 이름을 받아 인형 만들기로
+function startGame() {                                   // 시작: 혼내주고 싶은 사람의 이름을 받아 인형 만들기로
   const name = $('nameIn').value.trim().slice(0, 8);
   if (!name) { $('nameErr').textContent = '이름을 먼저 적어 주세요!'; $('nameIn').focus(); return; }
   audioOn(); sndPyong(1, 1, false);                       // "시작"을 누를 때 소리를 켠다
