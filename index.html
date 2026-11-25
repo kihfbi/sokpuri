@@ -170,21 +170,22 @@
 
   @media (max-width: 820px), (orientation: portrait) {
     body { flex-direction: column; }
-    #stage { flex: none; width: 100%; height: 66.7vw; max-height: 62vh; }
-    #panel { width: 100%; flex: 1; height: auto; border-left: 0; border-top: 5px solid #3b2416; }
+    #stage { flex: 1; width: 100%; height: auto; min-height: 0; }
+    #panel { width: 100%; flex: none; height: 44vh; border-left: 0; border-top: 5px solid #3b2416; }
     /* 폰 세로: 도구·소리 단추는 그림 아래 빈 자리에 놓아 인형을 안 가린다 */
-    #bar { position: fixed; top: calc(min(66.7vw, 62vh) + 6px); bottom: auto; left: 6px; right: 6px; gap: 5px; flex-wrap: wrap; align-items: flex-start; }
+    #bar { left: 6px; right: 6px; bottom: max(8px, env(safe-area-inset-bottom)); gap: 5px; flex-wrap: wrap-reverse; align-items: flex-end; }
+    body:not([data-scr="play"]) #bar { top: 8px; bottom: auto; justify-content: flex-end; flex-wrap: nowrap; align-items: flex-start; }
     #bar > div { gap: 5px; flex-wrap: wrap; }
     #bar button { font-size: 15px; padding: 8px 11px; border-width: 3px; border-radius: 12px; white-space: nowrap; }
     #bar > div { gap: 7px; }
     #bar { gap: 8px; }
     body:not([data-scr="play"]) #tools { display: none; }
     .pn { display: inline; }
-    #panel { padding-top: 52px; }
+
     #btns .tx { display: none; }
     .ov { position: fixed; }                 /* 좁은 화면에서는 시작·끝 카드가 화면 전체를 덮는다 */
-    .ov.side { inset: calc(min(66.7vw, 62vh) + 46px) 0 0 0; background: #2b2233; pointer-events: auto; justify-content: center; align-items: flex-start; padding: 8px; overflow-y: auto; }
-    .ov.side .card { width: 100%; max-height: none; }
+    .ov.side { inset: auto 0 0 0; max-height: 62vh; background: transparent; pointer-events: none; justify-content: center; align-items: flex-end; padding: 0 8px 8px; }
+    .ov.side .card { width: 100%; max-height: 62vh; }
     .card { padding: 18px 20px; }
     .card h1 { font-size: 30px; }
   }
@@ -940,14 +941,27 @@ const cv = document.getElementById('cv'), ctx = cv.getContext('2d');
 const stageEl = document.getElementById('stage');
 let view = 1;
 
+/* 지금 화면에 보이는 게임 세계의 네모 (V). 넓은 화면은 세계 전체(900x600)를 보여 주고,
+   폰 세로 화면은 인형 둘레만 크게 잘라 보여 주고(확대) 화면 전체를 쓴다 (위쪽은 하늘, 아래쪽 단추 자리는 바닥) */
+const V = { x: 0, y: 0, w: W, h: H };
+const portraitMode = () => window.matchMedia('(max-width: 820px), (orientation: portrait)').matches;
 function fit() {
   const r = stageEl.getBoundingClientRect();
-  const sc = Math.max(0.1, Math.min(r.width / W, r.height / H));
-  const cw = Math.floor(W * sc), ch = Math.floor(H * sc);
+  let cw, ch;
+  if (portraitMode() && r.width > 0 && r.height > 0) {
+    const pick2 = screen === 'make' || screen === 'summon';          // 만들기·불러내기는 아래쪽 카드 위에 인형이 보이게 위쪽에 놓는다
+    V.w = pick2 ? 540 : 440; V.h = V.w * r.height / r.width;
+    V.x = 430 - V.w / 2; V.y = 520 - (pick2 ? 0.30 : 0.70) * V.h;    // 발이 화면 세로의 34% / 70% 자리에 오게
+    cw = Math.floor(r.width); ch = Math.floor(r.height);
+  } else {
+    V.x = 0; V.y = 0; V.w = W; V.h = H;
+    const sc = Math.max(0.1, Math.min(r.width / W, r.height / H));
+    cw = Math.floor(W * sc); ch = Math.floor(H * sc);
+  }
   cv.style.width = cw + 'px'; cv.style.height = ch + 'px';
   const dpr = Math.min(window.devicePixelRatio || 1, 2);
   cv.width = Math.round(cw * dpr); cv.height = Math.round(ch * dpr);
-  view = cv.width / W;
+  view = cv.width / V.w;
   if (ready) draw();                       // 크기가 바뀌면 바로 다시 그린다 (빈 화면이 번쩍이지 않게)
 }
 let ready = false;
@@ -1048,7 +1062,7 @@ function say(stage) {
    ===================================================================== */
 function pos(e) {
   const r = cv.getBoundingClientRect();
-  return { x: (e.clientX - r.left) * W / r.width, y: (e.clientY - r.top) * H / r.height };
+  return { x: V.x + (e.clientX - r.left) * V.w / r.width, y: V.y + (e.clientY - r.top) * V.h / r.height };
 }
 cv.addEventListener('pointerdown', e => {
   e.preventDefault();
@@ -1613,34 +1627,34 @@ function drawBg() {
   const FL = 438;
   if (pl === 1) {                                                      // 운동장: 하늘 + 모래
     const g = ctx.createLinearGradient(0, 0, 0, 440); g.addColorStop(0, '#6ec3ff'); g.addColorStop(1, '#d4f0ff');
-    ctx.fillStyle = g; ctx.fillRect(-40, -40, W + 80, 500);
+    ctx.fillStyle = g; ctx.fillRect(-40, -900, W + 80, 1340);
     ctx.fillStyle = 'rgba(255,255,255,0.95)';
     for (const [x, y, r] of [[150, 110, 1], [700, 90, 1.2], [520, 190, 0.8]]) {
       ctx.beginPath(); for (const [dx, dy, rr2] of [[-34, 6, 26], [0, -6, 34], [36, 6, 26], [0, 12, 28]]) ctx.arc(x + dx * r, y + dy * r, rr2 * r, 0, TAU); ctx.fill();
     }
   } else if (pl === 2) {                                               // 옥상: 노을
     const g = ctx.createLinearGradient(0, 0, 0, 440); g.addColorStop(0, '#ff8f6b'); g.addColorStop(0.55, '#ffc58a'); g.addColorStop(1, '#ffe7b0');
-    ctx.fillStyle = g; ctx.fillRect(-40, -40, W + 80, 500);
+    ctx.fillStyle = g; ctx.fillRect(-40, -900, W + 80, 1340);
     ctx.fillStyle = '#ffd36b'; ctx.beginPath(); ctx.arc(230, 438, 100, Math.PI, TAU); ctx.fill();
     ctx.fillStyle = 'rgba(120,70,120,0.28)';                           // 먼 건물 그림자
     for (const [x, w, h] of [[500, 60, 150], [570, 50, 100], [640, 80, 190], [730, 50, 120], [790, 90, 160]]) ctx.fillRect(x, 440 - h, w, h);
   } else if (pl === 3) {                                               // 복싱실: 어두운 벽
-    ctx.fillStyle = '#4a3466'; ctx.fillRect(-40, -40, W + 80, 500);
-    ctx.fillStyle = 'rgba(255,255,255,0.07)'; for (let x = -40; x < W + 40; x += 90) ctx.fillRect(x, -40, 45, 490);
+    ctx.fillStyle = '#4a3466'; ctx.fillRect(-40, -900, W + 80, 1340);
+    ctx.fillStyle = 'rgba(255,255,255,0.07)'; for (let x = -40; x < W + 40; x += 90) ctx.fillRect(x, -900, 45, 1390);
   } else {                                                             // 기본 방 · 사무실
-    ctx.fillStyle = '#8fd8cf'; ctx.fillRect(-40, -40, W + 80, H + 80);
+    ctx.fillStyle = '#8fd8cf'; ctx.fillRect(-40, -900, W + 80, 1500);
     ctx.fillStyle = 'rgba(255,255,255,0.13)';
-    for (let x = -40; x < W + 40; x += 90) ctx.fillRect(x, -40, 45, 490);
+    for (let x = -40; x < W + 40; x += 90) ctx.fillRect(x, -900, 45, 1390);
   }
   const g = ctx.createRadialGradient(doll.x, 290, 30, doll.x, 290, 340);
   g.addColorStop(0, 'rgba(255,255,255,0.45)'); g.addColorStop(1, 'rgba(255,255,255,0)');
-  ctx.fillStyle = g; ctx.fillRect(-40, -40, W + 80, 500);
+  ctx.fillStyle = g; ctx.fillRect(-40, -900, W + 80, 1340);
 
   // 바닥
-  ctx.fillStyle = ['#f4b96a', '#f4b96a', '#e8c98a', '#b8b0a8', '#4b78c8'][pl + 1]; ctx.fillRect(-40, FL + 14, W + 80, 240);
+  ctx.fillStyle = ['#f4b96a', '#f4b96a', '#e8c98a', '#b8b0a8', '#4b78c8'][pl + 1]; ctx.fillRect(-40, FL + 14, W + 80, 1000);
   ctx.strokeStyle = pl === 3 ? 'rgba(255,255,255,0.28)' : 'rgba(120,70,20,0.2)'; ctx.lineWidth = 3;
   ctx.beginPath();
-  for (const y of [500, 552]) { ctx.moveTo(-40, y); ctx.lineTo(W + 40, y); }
+  for (const y of [500, 552, 612, 680, 756, 840, 936]) { ctx.moveTo(-40, y); ctx.lineTo(W + 40, y); }
   for (const x of [120, 380, 640]) { ctx.moveTo(x, 452); ctx.lineTo(x - 30, 500); ctx.moveTo(x + 130, 500); ctx.lineTo(x + 100, 552); ctx.moveTo(x + 10, 552); ctx.lineTo(x - 30, 640); }
   ctx.stroke();
   if (pl === 1) {                                                      // 운동장 선
@@ -2219,12 +2233,12 @@ function drawBand() {
 /* "네 말이 다 맞았어" 사과: 위에서 현수막이 스르륵 펼쳐진다 */
 function drawBanner() {
   if (!(ap.on && ap.kind === 2) || doll.hold <= 0.01) return;
-  const k = doll.hold, x = 450, w = 500, y0 = 96, bh = 100, h = bh * k;
+  const k = doll.hold, x = V.x + V.w / 2, w = Math.min(500, V.w - 24), y0 = V.w < 700 ? 40 : 96, bh = 100, h = bh * k;
   ctx.save();
-  ctx.strokeStyle = OUT; ctx.lineWidth = 4; ctx.beginPath(); ctx.moveTo(x - w / 2 + 30, 0); ctx.lineTo(x - w / 2 + 30, y0); ctx.moveTo(x + w / 2 - 30, 0); ctx.lineTo(x + w / 2 - 30, y0); ctx.stroke();
-  ctx.beginPath(); ctx.rect(0, 0, W, y0 + h); ctx.clip();
+  ctx.strokeStyle = OUT; ctx.lineWidth = 4; ctx.beginPath(); ctx.moveTo(x - w / 2 + 30, V.y); ctx.lineTo(x - w / 2 + 30, y0); ctx.moveTo(x + w / 2 - 30, V.y); ctx.lineTo(x + w / 2 - 30, y0); ctx.stroke();
+  ctx.beginPath(); ctx.rect(V.x - 20, V.y - 20, V.w + 40, y0 - V.y + h + 20); ctx.clip();
   rr(x - w / 2, y0, w, bh, 8); fs('#fff6e0', 5);
-  txt('"네 말이 다 맞았어!"', x, y0 + bh / 2 + 2, 42, '#d62828', 8);
+  txt('"네 말이 다 맞았어!"', x, y0 + bh / 2 + 2, w < 480 ? 34 : 42, '#d62828', 8);
   ctx.restore();
   rr(x - w / 2 - 8, y0 - 8, w + 16, 14, 7); fs('#c98b5e', 4);                  // 위 막대
   rr(x - w / 2 - 8, y0 + h - 6, w + 16, 14, 7); fs('#c98b5e', 4);              // 아래 막대 (펼쳐지며 내려온다)
@@ -2385,23 +2399,26 @@ function drawBubble() {
   if (bubble.t <= 0) return;
   const k = Math.min(1, (bubble.dur - bubble.t) / 0.12), a = Math.min(1, bubble.t / 0.2);
   ctx.save(); ctx.globalAlpha = a;
-  ctx.font = font(26);
+  let fz = 26; ctx.font = font(fz);
+  while (ctx.measureText(bubble.text).width + 46 > V.w - 20 && fz > 14) { fz--; ctx.font = font(fz); }
   const bw = ctx.measureText(bubble.text).width + 46, bh = 58;
-  const bx = Math.min(doll.x + doll.offX + 122, W - bw - 12), by = doll.footY - 352;
+  const bx = Math.max(V.x + 10, Math.min(doll.x + doll.offX + 122, V.x + V.w - bw - 12)), by = doll.footY - 352;
   ctx.translate(bx, by + bh + 20); ctx.scale(0.6 + 0.4 * k, 0.6 + 0.4 * k); ctx.translate(-bx, -(by + bh + 20));
   ctx.lineJoin = 'round';
   ctx.beginPath(); ctx.moveTo(bx + 24, by + bh - 6); ctx.lineTo(bx - 6, by + bh + 26); ctx.lineTo(bx + 58, by + bh - 6); ctx.closePath(); fs('#ffffff', 5);
   rr(bx, by, bw, bh, 22); fs('#ffffff', 5);
   ctx.fillStyle = '#fff'; ctx.fillRect(bx + 26, by + bh - 9, 30, 8);
-  ctx.fillStyle = OUT; ctx.textAlign = 'center'; ctx.textBaseline = 'middle'; ctx.font = font(26);
+  ctx.fillStyle = OUT; ctx.textAlign = 'center'; ctx.textBaseline = 'middle'; ctx.font = font(fz);
   ctx.fillText(bubble.text, bx + bw / 2, by + bh / 2 + 1);
   ctx.restore();
 }
 
 function drawHud() {
   if (screen !== 'play') return;
+  const narrow = V.w < 700;
+  ctx.save(); ctx.translate(V.x, V.y);                                 // 게이지·연타 글자는 보이는 화면 기준 자리에 그린다
   const pct = clamp(st.shown / cfg.gaugeTotal, 0, 1);
-  const x = 190, y = 22, w = 470, h = 28;
+  const x = narrow ? 112 : 190, y = 22, h = 28, w = V.w - x - (narrow ? 62 : 240);
   rr(x - 5, y - 5, w + 10, h + 10, 19); ctx.fillStyle = OUT; ctx.fill();
   rr(x, y, w, h, 14); ctx.fillStyle = '#fff6e0'; ctx.fill();
   if (pct > 0.005) {
@@ -2414,8 +2431,8 @@ function drawHud() {
   }
   ctx.fillStyle = 'rgba(59,36,22,0.45)';
   for (const m of [0.2, 0.45, 0.7]) ctx.fillRect(x + w * m - 1.5, y, 3, h);
-  txt('반성 게이지', x - 14, y + h / 2 + 1, 21, '#ffffff', 6, 'right');
-  txt(Math.floor(st.gauge / cfg.gaugeTotal * 100) + '%', x + w + 14, y + h / 2 + 1, 25, '#ffffff', 6, 'left');
+  txt('반성 게이지', x - 10, y + h / 2 + 1, narrow ? 15 : 21, '#ffffff', narrow ? 5 : 6, 'right');
+  txt(Math.floor(st.gauge / cfg.gaugeTotal * 100) + '%', x + w + 8, y + h / 2 + 1, narrow ? 19 : 25, '#ffffff', 6, 'left');
 
   // "12연타!" 글자가 점점 커진다
   if (comboFx.n >= 2 && comboFx.fade > 0) {
@@ -2423,7 +2440,7 @@ function drawHud() {
     const pop = comboFx.pop < 0.12 ? 1.35 - 0.35 * (comboFx.pop / 0.12) : 1;
     const c = n >= 30 ? '#ff4d6d' : n >= 20 ? '#ff7b2e' : n >= 10 ? '#ff9f1c' : '#ffe14d';
     ctx.save(); ctx.globalAlpha = clamp(comboFx.fade, 0, 1);
-    ctx.translate(160, 200); ctx.rotate(-0.09); ctx.scale(pop, pop);
+    ctx.translate(narrow ? 100 : 160, 200); ctx.rotate(-0.09); ctx.scale(pop, pop);
     txt(n + '연타!', 0, 0, size, c, 9);
     if (st.combo > 0) {
       const left = clamp(1 - (performance.now() / 1000 - st.lastHit) / cfg.comboWindow, 0, 1);
@@ -2437,6 +2454,7 @@ function drawHud() {
   if (adminOpen)                               // 집계 줄은 관리자 모드를 열었을 때만 보인다 (플레이어 화면에는 게이지만)
     txt('때린 횟수 ' + st.hits + ' · 최고 연속 ' + st.maxCombo + ' · 총 데미지 ' + st.totalDmg.toLocaleString('ko-KR'), 16, 104, 17, '#ffffff', 5, 'left');
   ctx.globalAlpha = 1;
+  ctx.restore();
   if (st.started && !st.done && st.toolHits[st.tool] === 0) {         // 고른 도구로 아직 못 맞혔으면 쓰는 법을 알려 준다
     const b = 1 + Math.sin(performance.now() / 180) * 0.04;
     ctx.save(); ctx.translate(doll.x, 118); ctx.scale(b, b);
@@ -2448,13 +2466,14 @@ function drawHud() {
 function drawCritRays() {
   if (critT >= cfg.critRays || cfg.critRays <= 0) return;
   const k = critT / cfg.critRays, a = 1 - k;
-  ctx.save(); ctx.translate(W / 2, H / 2); ctx.scale(1, H / W);
-  const g = ctx.createRadialGradient(0, 0, W * 0.32, 0, 0, W * 0.62);
+  const VW = Math.max(V.w, V.h * 0.8);
+  ctx.save(); ctx.translate(V.x + V.w / 2, V.y + V.h / 2); ctx.scale(1, V.h / VW);
+  const g = ctx.createRadialGradient(0, 0, VW * 0.32, 0, 0, VW * 0.62);
   g.addColorStop(0, 'rgba(255,205,0,0)'); g.addColorStop(1, 'rgba(255,205,0,' + (0.7 * a) + ')');
-  ctx.fillStyle = g; ctx.fillRect(-W / 2, -W / 2, W, W);
+  ctx.fillStyle = g; ctx.fillRect(-VW / 2, -VW / 2, VW, VW);
   ctx.fillStyle = 'rgba(255,222,70,' + (0.95 * a) + ')';
   for (const r of critRayList) {                                     // 안쪽 끝이 바깥으로 물러나며 퍼진다
-    const r0 = W * (0.26 + 0.26 * k) * r.len, r1 = W * 0.78;
+    const r0 = VW * (0.26 + 0.26 * k) * r.len, r1 = VW * 0.78;
     ctx.beginPath();
     ctx.moveTo(Math.cos(r.a) * r0, Math.sin(r.a) * r0);
     ctx.lineTo(Math.cos(r.a - r.w) * r1, Math.sin(r.a - r.w) * r1);
@@ -2467,14 +2486,14 @@ function drawCritBlink() {
   const n = Math.round(cfg.critBlinks);
   if (n < 1) return;                                                 // 0이면 깜박임을 끈다
   if (critSoft) {                                                    // 1초 안에 또 터졌으면 약하게 한 번만
-    if (critT < 0.05) { ctx.fillStyle = 'rgba(255,214,60,0.4)'; ctx.fillRect(0, 0, W, H); }
+    if (critT < 0.05) { ctx.fillStyle = 'rgba(255,214,60,0.4)'; ctx.fillRect(V.x, V.y, V.w, V.h); }
     return;
   }
   if (critT >= cfg.critBlinkTime) return;
   const seg = cfg.critBlinkTime / (2 * n - 1), idx = Math.floor(critT / seg);   // 번쩍 → 쉼 → 번쩍 …
   if (idx % 2) return;
   ctx.fillStyle = idx === 0 ? 'rgba(255,255,255,0.82)' : 'rgba(255,214,60,0.62)';   // 처음은 흰색, 그다음은 금색
-  ctx.fillRect(0, 0, W, H);
+  ctx.fillRect(V.x, V.y, V.w, V.h);
 }
 function drawCritBanner() {
   const dur = 0.75;
@@ -2483,7 +2502,8 @@ function drawCritBanner() {
   const sc = k < 0.12 ? 0.3 + (k / 0.12) * 1.0 : 1.3 - 0.3 * Math.min(1, (k - 0.12) / 0.12);
   ctx.save();
   ctx.globalAlpha = k > 0.75 ? (1 - k) / 0.25 : 1;
-  ctx.translate(W / 2, 132); ctx.rotate(-0.05); ctx.scale(sc, sc);   // 데미지 숫자를 가리지 않게 위쪽 가운데에 둔다
+  const bs = Math.min(1, V.w / 700);
+  ctx.translate(V.x + V.w / 2, V.y + (V.w < 700 ? 150 : 132)); ctx.rotate(-0.05); ctx.scale(sc * bs, sc * bs);   // 데미지 숫자를 가리지 않게 위쪽 가운데에 둔다
   ctx.font = font(104); ctx.textAlign = 'center'; ctx.textBaseline = 'middle'; ctx.lineJoin = 'round';
   ctx.lineWidth = 26; ctx.strokeStyle = '#7a3b00'; ctx.strokeText('크리티컬!', 0, 0);
   ctx.lineWidth = 11; ctx.strokeStyle = '#ffffff'; ctx.strokeText('크리티컬!', 0, 0);
@@ -2494,8 +2514,8 @@ function drawCritBanner() {
 }
 
 function draw() {
-  ctx.setTransform(view, 0, 0, view, 0, 0);
-  ctx.clearRect(0, 0, W, H);
+  ctx.setTransform(view, 0, 0, view, -V.x * view, -V.y * view);
+  ctx.clearRect(V.x - 4, V.y - 4, V.w + 8, V.h + 8);
   ctx.save();
   ctx.translate(shake.x, shake.y);                                   // ③ 화면 흔들림
   if (zoomK > 0.002) { const z = 1 + 0.09 * zoomK; ctx.translate(zoomX, zoomY); ctx.scale(z, z); ctx.translate(-zoomX, -zoomY); }
@@ -2513,7 +2533,7 @@ function draw() {
   if (zoomK > 0.002) {                                               // ⑪ 마지막 일격: 화면이 어둑해지며 느려진다
     const g = ctx.createRadialGradient(zoomX, zoomY, 120, zoomX, zoomY, 620);
     g.addColorStop(0, 'rgba(30,0,50,0)'); g.addColorStop(1, 'rgba(30,0,50,' + (0.6 * zoomK) + ')');
-    ctx.fillStyle = g; ctx.fillRect(0, 0, W, H);
+    ctx.fillStyle = g; ctx.fillRect(V.x, V.y, V.w, V.h);
   }
   drawCritRays();                                                    // ⑫ 크리티컬: 가장자리에서 금빛 줄이 퍼진다
   drawHud();
