@@ -158,6 +158,13 @@
   .orow { display: flex; align-items: center; gap: 6px; margin: 5px 0; }
   .orow > span { flex: 0 0 52px; font-weight: 900; font-size: 14px; }
   .chips { display: flex; flex-wrap: wrap; gap: 4px; }
+  .mktoggle { display: block; width: 100%; margin: 10px 0 4px; font-size: 16px; padding: 9px 10px; background: linear-gradient(#b9a2ff, #7a5cd6); color: #fff; border: 4px solid #3b2416; border-radius: 14px; box-shadow: 0 5px 0 #3b2416, inset 0 3px 0 #e3d8ff; text-shadow: 0 2px 0 #3b2416, 1px 0 0 #3b2416, -1px 0 0 #3b2416; cursor: pointer; }
+  #mkRows.hidden { display: none; }
+  /* 스크롤 막대를 굵고 눈에 띄게 (폰에서도 보이게) */
+  .ov.side .card { scrollbar-width: auto; scrollbar-color: #e08a1e #fff0c2; }
+  .ov.side .card::-webkit-scrollbar { width: 14px; }
+  .ov.side .card::-webkit-scrollbar-track { background: #fff0c2; border-radius: 8px; box-shadow: inset 0 0 0 2px #3b2416; }
+  .ov.side .card::-webkit-scrollbar-thumb { background: #e08a1e; border-radius: 8px; border: 2px solid #3b2416; }
   .chips button, .opts button { font-size: 13px; padding: 4px 8px; border-width: 2px; border-radius: 10px; }
   .chips button.sw { width: 30px; height: 28px; padding: 0; border-width: 3px; }
   .chips button.on, .opts button.on { background: #ffd23f; box-shadow: 0 3px 0 #3b2416; }
@@ -307,13 +314,14 @@
     <div class="card wide">
       <h2>어떻게 생겼어요??</h2>
       <p class="small" id="mkSub">때려 주고 싶은 그 녀석을 닮게 골라 보세요.</p>
-      <div id="mkRows"></div>
       <input type="file" id="photoFile" accept="image/*" hidden>
       <div class="two">
         <button id="btnRand">랜덤생성</button>
         <button type="button" id="btnPhoto">사진으로 생성</button>
-        <button id="btnMade" class="big">다 됐다</button>
+        <button id="btnMade" class="big">혼내주기</button>
       </div>
+      <button type="button" id="mkToggle" class="mktoggle">캐릭터 상세 꾸미기 ▼</button>
+      <div id="mkRows" class="hidden"></div>
     </div>
   </div>
 
@@ -3202,6 +3210,12 @@ function refreshMake() {
     [...c.children].forEach(b => { const i = +b.dataset.i; b.classList.toggle('on', o.multi ? !!(look[k] & (1 << i)) : look[k] === i); });
   });
 }
+function setMkOpen(open) {
+  $('mkRows').classList.toggle('hidden', !open);
+  $('mkToggle').textContent = open ? '캐릭터 상세 꾸미기 ▲' : '캐릭터 상세 꾸미기 ▼';
+}
+$('mkToggle').addEventListener('click', () => { audioOn(); setMkOpen($('mkRows').classList.contains('hidden')); });
+setMkOpen(window.innerWidth >= 900);
 $('btnRand').addEventListener('click', () => {
   audioOn();
   look.gender = Math.random() < 0.5 ? 0 : 1;
