@@ -43,6 +43,8 @@
     display: flex; flex-wrap: wrap-reverse; justify-content: space-between; align-items: flex-end; gap: 8px;
   }
   #bar > div { display: flex; gap: 8px; pointer-events: auto; }
+  #tools button { display: inline-flex; align-items: center; gap: 2px; }
+  .ticon { width: 38px; height: 38px; margin: -6px 0; pointer-events: none; }
   #tools button.on { background: #ffd23f; transform: translateY(-4px); box-shadow: 0 4px 0 #3b2416; }
   button {
     font: inherit; font-weight: 800; color: #3b2416; cursor: pointer;
@@ -198,7 +200,7 @@
   <div id="bar">
     <div id="tools">
       <button data-tool="hammer" class="on" title="인형을 누르기">🔨 뿅망치</button>
-      <button data-tool="pot" title="누른 채 휘둘러 스치기">🍳 양은냄비</button>
+      <button data-tool="pot" title="누른 채 휘둘러 스치기">🪰 파리채</button>
       <button data-tool="band" title="누른 채 뒤로 당겼다 놓기">➰ 고무줄</button>
     </div>
     <div id="btns">
@@ -339,7 +341,7 @@ const DEFAULTS = {
   critRays:      0.35,             // 가장자리 금빛 줄이 퍼지는 시간 (초)
   critPush:      1,                // 인형이 뒤로 밀리는 정도 (배)
   critVol:       1,                // 크리티컬 전용 소리 크기
-  // 양은냄비 (휘두르기) ― 빠르기 900 = 1초에 화면 가로 끝에서 끝까지
+  // 파리채 (휘두르기) ― 빠르기 900 = 1초에 화면 가로 끝에서 끝까지
   swingMin:    150,                // 이보다 느리게 스치면 안 맞는다
   swingMid:    1000,               // 이 빠르기부터 "중"
   swingStrong: 2400,               // 이 빠르기부터 "강"
@@ -402,7 +404,7 @@ const TUNE = [
     ['dmg.2', '강 · 기본 데미지', 1, 100, 1, 'dm'],
     ['dmgRand', '데미지 무작위 폭', 0, 50, 1, 'pm'],
     ['mul_hammer', '뿅망치 공격력', 0.5, 3, 0.1, 'x'],
-    ['mul_pot', '양은냄비 공격력', 0.5, 3, 0.1, 'x'],
+    ['mul_pot', '파리채 공격력', 0.5, 3, 0.1, 'x'],
     ['mul_band', '고무줄 공격력', 0.5, 3, 0.1, 'x'],
     ['mul_scallion', '대파 공격력', 0.5, 3, 0.1, 'x'],
     ['mul_stamp', '결재 도장 공격력', 0.5, 3, 0.1, 'x'],
@@ -441,13 +443,13 @@ const QUICK = [
 ];
 /* 새 도구 2개의 막대 (조절 칸에서 펼쳐진 채로 보인다) */
 const TOOLTUNE = [
-  { t: '🍳 양은냄비 (휘두르기)', id: 'readPot', note: '빠르기 900 = 1초에 화면 가로 끝에서 끝까지', rows: [
+  { t: '🪰 파리채 (휘두르기)', id: 'readPot', note: '빠르기 900 = 1초에 화면 가로 끝에서 끝까지', rows: [
     ['swingMin', '이보다 느리면 안 맞음', 0, 1000, 50, 'sp'],
     ['swingMid', '이 빠르기부터 "중"', 200, 4000, 50, 'sp'],
     ['swingStrong', '이 빠르기부터 "강"', 400, 8000, 100, 'sp'],
     ['swingCool', '연달아 맞는 최소 간격', 0, 0.5, 0.01, 's'],
-    ['potVol', '냄비 소리 크기', 0, 1.5, 0.05, 'frac'],
-    ['potRing', '"깡!" 울림 길이', 0.3, 2.5, 0.1, 'x'],
+    ['potVol', '파리채 소리 크기', 0, 1.5, 0.05, 'frac'],
+    ['potRing', '울림 길이(합성음)', 0.3, 2.5, 0.1, 'x'],
   ]},
   { t: '➰ 고무줄 (당겼다 놓기)', id: 'readBand', note: '길이 900 = 화면 가로 전체', rows: [
     ['bandMin', '이보다 짧게 당기면 안 쏨', 0, 100, 5, 'len'],
@@ -457,7 +459,7 @@ const TOOLTUNE = [
     ['bandVol', '고무줄 소리 크기', 0, 1.5, 0.05, 'frac'],
   ]},
 ];
-const TOOL_NAME = { hammer: '뿅망치', pot: '양은냄비', band: '고무줄', scallion: '대파', stamp: '결재 도장', ball: '피구공', towel: '젖은 수건', glove: '스프링 글러브' };
+const TOOL_NAME = { hammer: '뿅망치', pot: '파리채', band: '고무줄', scallion: '대파', stamp: '결재 도장', ball: '피구공', towel: '젖은 수건', glove: '스프링 글러브' };
 const LV = ['약', '중', '강'];
 /* 도구 8개 (기획 7번): 어디서나 쓰는 4개 + 장소마다 전용 1개. mode: tap 누르기 / swing 휘두르기 / pull 당겼다 놓기 */
 const TOOLS = {
@@ -485,7 +487,7 @@ const LINES = [
 /* 맞을 때 튀어나오는 글자 (도구마다 다르다) */
 const POW = {
   hammer: { n: ['뿅!', '뿅!', '뿅!!', '삑!', '뾱!'], strong: '뿅!!!', last: '뿌우웅!!', color: '#ff5d8f' },
-  pot:    { n: ['깡!', '깡!', '까앙!', '땅!'], strong: '깡!!!', last: '까아아앙!!', color: '#ffb300' },
+  pot:    { n: ['착!', '짝!', '찰싹!', '탁!'], strong: '짝!!!', last: '짜아악!!', color: '#ffb300' },
   band:   { n: ['찰싹!', '짝!', '찰싹!', '착!'], strong: '찰싹!!!', last: '찰싸악!!', color: '#ff4d6d' },
   scallion: { n: ['철썩!', '철썩!', '촤악!', '탁!'], strong: '철써억!!!', last: '철써어억!!', color: '#6fcf5a' },
   stamp:  { n: ['쾅!', '쾅!', '꽝!', '쿵!'], strong: '쾅!!!', last: '꽈아앙!!', color: '#e63946' },
@@ -590,7 +592,7 @@ const SOUND_MAP = {
   band:   'rubber_boink_slap.mp3',     // 고무줄   = 보잉 + 찰싹 (파일 안의 1번째 소리)
   crit:   'hammer_head_crash.mp3',     // 크리티컬 = 머리에 쾅 (일반 타격 소리를 대신한다)
 };
-const SOUND_LABEL = { hammer: '뿅망치', pot: '양은냄비', band: '고무줄', crit: '크리티컬' };
+const SOUND_LABEL = { hammer: '뿅망치', pot: '파리채', band: '고무줄', crit: '크리티컬' };
 /* 선택 상자에서 파일 이름 옆에 붙는 한글 설명 (파일 이름을 보고 붙인 것. 여기 없는 파일은 이름만 나온다) */
 const SOUND_DESC = {
   'pot_clang.mp3': '쨍한 냄비',
@@ -937,7 +939,7 @@ function sndFanfare() {
    ===================================================================== */
 const W = 900, H = 600, TAU = Math.PI * 2;
 const OUT = '#3b2416';
-const cv = document.getElementById('cv'), ctx = cv.getContext('2d');
+const cv = document.getElementById('cv'); let ctx = cv.getContext('2d');
 const stageEl = document.getElementById('stage');
 let view = 1;
 
@@ -1198,11 +1200,33 @@ function setTool(name) {
   document.querySelectorAll('#tools button').forEach(b => b.classList.toggle('on', b.dataset.tool === name));
 }
 /* 도구 단추: 어디서나 쓰는 4개 + 고른 장소의 전용 1개 (그 장소에 없는 도구는 안 보인다) */
+const ICON_CACHE = {};
+/* 도구 단추 그림: 게임 속에서 그리는 도구 그림을 그대로 작게 그려 쓴다 */
+function toolIcon(k) {
+  if (ICON_CACHE[k]) return ICON_CACHE[k];
+  const S = 72, c = document.createElement('canvas'); c.width = c.height = S * 2;
+  const real = ctx, o = { tl: { ...tl }, ham: { ...ham }, tA: toolAng, sa: swing.ang, kx: pot.kx, rt: pot.ringT };
+  ctx = c.getContext('2d'); ctx.scale(2, 2); ctx.translate(S / 2, S / 2);
+  tl.x = tl.y = 0; ham.x = ham.y = ham.dy = 0; ham.sq = 0; pot.kx = 0; pot.ringT = 9;
+  const tilt = a => { swing.ang = a - Math.PI / 2; toolAng = a; };
+  const fit = (sc, ox, oy) => { ctx.scale(sc, sc); ctx.translate(ox || 0, oy || 0); };
+  if (k === 'hammer') { fit(0.26, -60, 30); drawHammerAt(-0.9, 1); }
+  else if (k === 'pot') { fit(0.34, 0, 0); drawSwatterAt(0, 0, 1, 0.6); }
+  else if (k === 'band') { fit(1.5); bandRing(0, 0, 17, 12, -0.3, BAND_COLORS[1]); }
+  else if (k === 'scallion') { tilt(0.7); fit(0.36, 0, 0); drawScallion(); }
+  else if (k === 'stamp') { ham.ang = 0; fit(0.42, 0, 30); drawStamp(); }
+  else if (k === 'ball') { fit(1.2); ballAt(0, 0, 24, -0.3); }
+  else if (k === 'towel') { tilt(0.7); fit(0.28, 0, 0); drawTowel(); }
+  else if (k === 'glove') { ham.side = 1; ham.ang = 0.3; ham.x = 0.3 * 280 + 20 - 6; ctx.beginPath(); ctx.rect(-S / 2, -S / 2, S, S); ctx.clip(); fit(0.62); drawGlove(); }
+  ctx = real; Object.assign(tl, o.tl); Object.assign(ham, o.ham); toolAng = o.tA; swing.ang = o.sa; pot.kx = o.kx; pot.ringT = o.rt;
+  return (ICON_CACHE[k] = c.toDataURL());
+}
 function buildTools() {
   const box = document.getElementById('tools'); box.innerHTML = '';
   for (const k of toolsOf(pick.place)) {
     const b = document.createElement('button'); b.type = 'button'; b.dataset.tool = k;
-    b.textContent = TOOLS[k].icon + ' ' + TOOL_NAME[k];
+    const im = document.createElement('img'); im.src = toolIcon(k); im.alt = ''; im.className = 'ticon';
+    b.appendChild(im); b.appendChild(document.createTextNode(' ' + TOOL_NAME[k]));
     if (TOOLS[k].place !== undefined) b.title = PLACES[pick.place] + ' 전용 도구';
     b.addEventListener('click', () => { audioOn(); setTool(k); });
     box.appendChild(b);
@@ -1297,10 +1321,8 @@ function hit(x, y, s, part, o) {
   if (vert) ham.stuck = true;
   if (crit) spawnStars(x, y + drop * 0.6, nBits, 2, true);         // ⑦ 튀는 것: 크리티컬이면 금색 별만 2배로 터진다
   if (tool === 'pot') {                                            //    양은냄비: 울림 물결 + 종처럼 부르르
-    if (!crit) spawnWaves(x + sgn * 30, y, nBits, fx);
-    if (!crit) bursts.push({ x: x + sgn * 30, y, t: 0, dur: 0.38, r: [70, 110, 160][fx], ring: true });
-    doll.tremT = 0; doll.tremDur = [0.4, 0.6, 0.9][fx]; doll.tremAmp = [3, 6, 10][fx];
-    pot.ringT = 0; pot.kx = -sgn * [10, 18, 28][fx];
+    if (!crit) spawnBits(x, y, nBits, fx, 'dust', o.dx);              //    파리채: 먼지가 팡
+    pot.ringT = 0; pot.kx = -sgn * [6, 10, 16][fx];
   } else if (tool === 'band') {                                    //    "따끔!" 글자 + 맞은 볼이 빨개진다
     if (!crit) spawnTexts(x, y, nBits, fx);
     doll.cheekSide = x < doll.x ? -1 : 1; doll.cheekT = 1.8;
@@ -2140,34 +2162,33 @@ function drawHammer() {
   drawHammerAt(ham.ang, 1);
 }
 
-/* 양은냄비: 노란 냄비를 옆에서 본 모습. 바닥이 가는 쪽을 향한다 */
-function drawPotAt(x, y, alpha) {
+/* 파리채: 긴 손잡이 + 그물 머리. 휘두르는 방향으로 눕는다 */
+function drawSwatterAt(x, y, alpha, ang) {
   ctx.save();
   ctx.globalAlpha = alpha;
   ctx.translate(x + pot.kx, y);
-  ctx.rotate(pot.ringT < 0.7 ? Math.sin(pot.ringT * 80) * 0.14 * Math.exp(-pot.ringT * 7) : 0);   // 맞고 나서 부르르
-  ctx.scale(pot.face, 1);
+  ctx.rotate(ang + (pot.ringT < 0.5 ? Math.sin(pot.ringT * 70) * 0.12 * Math.exp(-pot.ringT * 8) : 0));
   ctx.lineJoin = 'round'; ctx.lineCap = 'round';
-  for (const s of [-1, 1]) {                                          // 양쪽 손잡이
-    ctx.beginPath(); ctx.arc(-6, s * 57, 13, s > 0 ? 0 : Math.PI, s > 0 ? Math.PI : TAU);
-    ctx.lineWidth = 13; ctx.strokeStyle = OUT; ctx.stroke();
-    ctx.lineWidth = 5; ctx.strokeStyle = '#ffe9a8'; ctx.stroke();
-  }
-  rr(-36, -56, 72, 112, 14); fs('#ffcf40');                           // 몸통
-  rr(24, -56, 12, 112, 6); fs('#f0a500', 4);                          // 바닥
-  ctx.beginPath(); ctx.ellipse(-36, 0, 11, 56, 0, 0, TAU); fs('#ffe9a8', 5);   // 입구
-  ctx.beginPath(); ctx.ellipse(-36, 0, 5.5, 45, 0, 0, TAU); ctx.fillStyle = '#b97a00'; ctx.fill();
-  ctx.fillStyle = 'rgba(255,255,255,0.6)'; rr(-16, -45, 32, 8, 4); ctx.fill();
-  ctx.strokeStyle = 'rgba(120,70,0,0.35)'; ctx.lineWidth = 3;         // 찌그러진 자국
-  ctx.beginPath(); ctx.arc(4, 14, 10, 0.3, 2.2); ctx.moveTo(-8, 34); ctx.lineTo(10, 38); ctx.stroke();
+  rr(-8, 20, 16, 112, 8); fs('#2fb8d6');                              // 손잡이
+  rr(-9, 104, 18, 30, 8); fs('#ff7b54', 4);                           // 손잡이 끝
+  ctx.fillStyle = 'rgba(255,255,255,0.5)'; rr(-4, 30, 4, 64, 2); ctx.fill();
+  rr(-34, -92, 68, 118, 22); fs('#ff5a5f');                           // 둥근 틀
+  rr(-24, -82, 48, 98, 14); fs('#fff6e0', 3);                         // 그물 판
+  ctx.strokeStyle = 'rgba(59,36,22,0.55)'; ctx.lineWidth = 2.5; ctx.beginPath();
+  for (let i = -16; i <= 16; i += 8) { ctx.moveTo(i, -76); ctx.lineTo(i, 10); }
+  for (let j = -68; j <= 4; j += 12) { ctx.moveTo(-20, j); ctx.lineTo(20, j); }
+  ctx.stroke();
+  ctx.fillStyle = 'rgba(255,255,255,0.55)'; rr(-30, -80, 7, 40, 3); ctx.fill();
   ctx.restore();
 }
 function drawPot() {
   const tr = pot.trail;
   if (swing.on && swing.speed > cfg.swingMid && tr.length >= 3) {     // 빠르게 휘두르면 잔상
-    drawPotAt(tr[0].x, tr[0].y, 0.15); drawPotAt(tr[1].x, tr[1].y, 0.3);
+    const ang = swingToolAng();
+    drawSwatterAt(tr[0].x, tr[0].y, 0.15, ang); drawSwatterAt(tr[1].x, tr[1].y, 0.3, ang);
+    drawSwatterAt(tl.x, tl.y, 1, ang); return;
   }
-  drawPotAt(tl.x, tl.y, 1);
+  drawSwatterAt(tl.x, tl.y, 1, swingToolAng());
 }
 
 /* 고무줄: 당기는 동안 팽팽한 선이 보이고, 놓으면 날아간다 */
