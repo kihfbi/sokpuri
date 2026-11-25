@@ -90,6 +90,9 @@
     background: linear-gradient(#e8328a, #a8145c); border-top: 4px solid #ffd96a; border-bottom: 4px solid #5c0a38; transform: rotate(-3deg);
     text-shadow: 0 3px 0 #5c0a38, 0 0 6px #5c0a38; clip-path: polygon(0 0, 100% 0, 96% 50%, 100% 100%, 0 100%, 4% 50%); }
   .tag { margin-top: 12px; font-size: clamp(14px, 3.6vmin, 20px); font-weight: 800; color: #fff; text-shadow: 0 2px 0 #34145c, 0 0 6px #34145c, 0 0 3px #34145c; }
+  .ver { position: absolute; left: 0; right: 0; bottom: max(8px, env(safe-area-inset-bottom)); text-align: center; pointer-events: none;
+    font: 600 11px/1 ui-monospace, "SFMono-Regular", Consolas, Menlo, monospace; letter-spacing: 0.06em; color: rgba(255,226,140,0.62); text-shadow: 0 1px 2px rgba(20,8,40,0.8); }
+  @media (orientation: portrait) { .ov.title .tpanel { margin-bottom: calc(1vh + 26px); } }
   .tpanel { width: min(94vw, 430px); margin-bottom: 1vh; padding: 14px 18px 12px; text-align: center; border: 4px solid #e8b83a; border-radius: 20px;
     background: radial-gradient(ellipse at 50% 0%, rgba(255,255,255,0.14), transparent 60%), linear-gradient(#4f2c86, #2c1450);
     box-shadow: inset 0 0 0 3px #34145c, inset 0 5px 0 rgba(255,255,255,0.16), 0 9px 0 #1c0a38, 0 16px 26px rgba(0,0,0,0.5), 0 0 24px rgba(255,200,80,0.25); }
@@ -297,6 +300,7 @@
       <button id="btnRedo" class="kbtn wood hidden">그 녀석 다시 부르기</button>
       <p class="small">"시작"을 누르면 소리가 켜져요 · 폰은 가로로 돌리면 더 크게 보여요</p>
     </div>
+    <div class="ver">v0.6.0 beta &nbsp;·&nbsp; build <span id="buildId">20261126-0005</span> &nbsp;·&nbsp; &copy; SY INHOVATION</div>
   </div>
 
   <div id="photoOv" class="ov hidden" style="z-index:65;background:rgba(20,10,35,0.72)">
