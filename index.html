@@ -300,7 +300,7 @@
       <button id="btnRedo" class="kbtn wood hidden">그 녀석 다시 부르기</button>
       <p class="small">"시작"을 누르면 소리가 켜져요 · 폰은 가로로 돌리면 더 크게 보여요</p>
     </div>
-    <div class="ver">v0.6.0 beta &nbsp;·&nbsp; build <span id="buildId">20261126-0020</span> &nbsp;·&nbsp; &copy; SY INHOVATION</div>
+    <div class="ver">v0.6.0 beta &nbsp;·&nbsp; build <span id="buildId">20261126-0026</span> &nbsp;·&nbsp; &copy; SY INHOVATION</div>
   </div>
 
   <div id="photoOv" class="ov hidden" style="z-index:65;background:rgba(20,10,35,0.72)">
@@ -1072,7 +1072,7 @@ function fit() {
     const pick2 = screen === 'make' || screen === 'summon';          // 만들기·불러내기는 아래쪽 카드 위에 인형이 보이게 위쪽에 놓는다
     V.w = pick2 ? 540 : 440; V.h = V.w * r.height / r.width;
     const mkRowsEl = document.getElementById('mkRows'), mkOpen = mkRowsEl && !mkRowsEl.classList.contains('hidden');
-    const footAt = screen === 'make' ? (mkOpen ? 0.38 : 0.52) : (pick2 ? 0.36 : 0.70);   // 발이 화면 세로의 몇 % 자리에 오게 (꾸미기 펼치면 위로, 접으면 가운데쯤)
+    const footAt = screen === 'make' ? (mkOpen ? 0.31 : 0.52) : (pick2 ? 0.36 : 0.70);   // 발이 화면 세로의 몇 % 자리에 오게 (꾸미기 펼치면 위로, 접으면 가운데쯤)
     V.x = 430 - V.w / 2; V.y = 520 - footAt * V.h;
     cw = Math.floor(r.width); ch = Math.floor(r.height);
   } else {
@@ -1546,7 +1546,7 @@ function hit(x, y, s, part, o) {
     if (cfg.slowTime > 0) slowT = cfg.slowTime; else afterSlow();
   }
 }
-function afterSlow() { setTimeout(startApology, 700); }
+function afterSlow() { setTimeout(startApology, 250); }
 function startApology() {
   if (!st.done || ap.on || ap.leave) return;
   ap.on = true; ap.t = 0; ap.ding = false; ap.kind = pick.wish; ap.dur = AP_DURS[ap.kind]; ap.page = -1;
