@@ -1067,7 +1067,9 @@ function fit() {
   if (portraitMode() && r.width > 0 && r.height > 0) {
     const pick2 = screen === 'make' || screen === 'summon';          // 만들기·불러내기는 아래쪽 카드 위에 인형이 보이게 위쪽에 놓는다
     V.w = pick2 ? 540 : 440; V.h = V.w * r.height / r.width;
-    V.x = 430 - V.w / 2; V.y = 520 - (pick2 ? 0.30 : 0.70) * V.h;    // 발이 화면 세로의 34% / 70% 자리에 오게
+    const mkRowsEl = document.getElementById('mkRows'), mkOpen = mkRowsEl && !mkRowsEl.classList.contains('hidden');
+    const footAt = screen === 'make' ? (mkOpen ? 0.38 : 0.52) : (pick2 ? 0.36 : 0.70);   // 발이 화면 세로의 몇 % 자리에 오게 (꾸미기 펼치면 위로, 접으면 가운데쯤)
+    V.x = 430 - V.w / 2; V.y = 520 - footAt * V.h;
     cw = Math.floor(r.width); ch = Math.floor(r.height);
   } else {
     V.x = 0; V.y = 0; V.w = W; V.h = H;
@@ -3213,6 +3215,7 @@ function refreshMake() {
 function setMkOpen(open) {
   $('mkRows').classList.toggle('hidden', !open);
   $('mkToggle').textContent = open ? '캐릭터 상세 꾸미기 ▲' : '캐릭터 상세 꾸미기 ▼';
+  fit();                                                          // 인형 자리를 카드 높이에 맞춰 다시 잡는다
 }
 $('mkToggle').addEventListener('click', () => { audioOn(); setMkOpen($('mkRows').classList.contains('hidden')); });
 setMkOpen(window.innerWidth >= 900);
@@ -3447,7 +3450,16 @@ window.__sok = {
   drawBg = function () {
     const pl = (screen === 'play' || screen === 'summon') ? pick.place : -1;
     const sb = BGS[Math.max(0, pl)];
-    if (sb && sb.complete && sb.naturalWidth) { ctx.drawImage(sb, -40, -40, W + 80, H + 80); return; }
+    if (sb && sb.complete && sb.naturalWidth) {
+      ctx.drawImage(sb, -40, -40, W + 80, H + 80);
+      // 폰 세로 화면은 세계보다 길다: 그림 아래·위 가장자리 줄을 늘려 바닥·벽을 채운다 (검은 빈칸 방지)
+      const nw = sb.naturalWidth, nh = sb.naturalHeight;
+      const fy = Math.round(nh * 0.9);
+      ctx.drawImage(sb, 0, fy, nw, 2, -40, H + 20, W + 80, 1220);
+      const wy = Math.round(nh * 0.04);
+      ctx.drawImage(sb, 0, wy, nw, 2, -40, -1240, W + 80, 1220);
+      return;
+    }
     baseDrawBg();
   };
   font = function (size) { return '400 ' + size + 'px "SkinJua","Malgun Gothic","Apple SD Gothic Neo","Noto Sans KR",sans-serif'; };
