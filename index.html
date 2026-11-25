@@ -57,6 +57,7 @@
   .card td { padding: 2px 12px; text-align: left; }
   .card td:last-child { font-weight: 900; text-align: right; }
   .small { font-size: 13px; opacity: 0.75; }
+  .pn { display: none; }
   .card .two { display: flex; gap: 10px; justify-content: center; flex-wrap: wrap; }
   .card .two .big { padding: 12px 22px; }
   .card .big.alt { background: #6c8cff; }
@@ -118,8 +119,11 @@
     /* 폰 세로: 도구·소리 단추는 그림 아래 빈 자리에 놓아 인형을 안 가린다 */
     #bar { position: fixed; top: calc(min(66.7vw, 62vh) + 6px); bottom: auto; left: 6px; right: 6px; gap: 5px; flex-wrap: wrap; align-items: flex-start; }
     #bar > div { gap: 5px; flex-wrap: wrap; }
-    #bar button { font-size: 12px; padding: 4px 7px; border-width: 2px; border-radius: 10px; white-space: nowrap; }
+    #bar button { font-size: 15px; padding: 8px 11px; border-width: 3px; border-radius: 12px; white-space: nowrap; }
+    #bar > div { gap: 7px; }
+    #bar { gap: 8px; }
     body:not([data-scr="play"]) #tools { display: none; }
+    .pn { display: inline; }
     #panel { padding-top: 52px; }
     #btns .tx { display: none; }
     .ov { position: fixed; }                 /* 좁은 화면에서는 시작·끝 카드가 화면 전체를 덮는다 */
@@ -153,7 +157,7 @@
         누르기 · 누른 채 휘두르기 · 누른 채 뒤로 당겼다 놓기<br>도구는 8가지, 장소는 4곳이에요.</p>
       <button id="btnStart" class="big">시작</button>
       <div><button id="btnRedo" class="big alt hidden">그 녀석 다시 부르기</button></div>
-      <p class="small">"시작"을 누르면 소리가 켜집니다.</p>
+      <p class="small">"시작"을 누르면 소리가 켜집니다.<br class="pn">폰은 가로로 돌리면 더 크게 보여요.</p>
     </div>
   </div>
 
@@ -401,7 +405,7 @@ const TOOLS = {
   band:     { icon: '➰', mode: 'pull' },
   scallion: { icon: '🌿', mode: 'swing' },
   stamp:    { icon: '📋', mode: 'tap', place: 0 },       // 사무실
-  ball:     { icon: '🏐', mode: 'pull', place: 1 },      // 운동장
+  ball:     { icon: '🔴', mode: 'pull', place: 1 },      // 운동장
   towel:    { icon: '🧻', mode: 'swing', place: 2 },     // 옥상
   glove:    { icon: '🥊', mode: 'tap', place: 3 },       // 복싱실
 };
@@ -424,7 +428,7 @@ const POW = {
   band:   { n: ['찰싹!', '짝!', '찰싹!', '착!'], strong: '찰싹!!!', last: '찰싸악!!', color: '#ff4d6d' },
   scallion: { n: ['철썩!', '철썩!', '촤악!', '탁!'], strong: '철써억!!!', last: '철써어억!!', color: '#6fcf5a' },
   stamp:  { n: ['쾅!', '쾅!', '꽝!', '쿵!'], strong: '쾅!!!', last: '꽈아앙!!', color: '#e63946' },
-  ball:   { n: ['퉁!', '퉁!', '텅!', '퍽!'], strong: '퉁!!!', last: '퉁퉁퉁!!', color: '#ff8c42' },
+  ball:   { n: ['퉁!', '퉁!', '텅!', '퍽!'], strong: '퉁!!!', last: '퉁퉁퉁!!', color: '#e63946' },
   towel:  { n: ['철퍼덕!', '촤악!', '철퍼덕!', '찰박!'], strong: '철퍼덕!!!', last: '철퍼더억!!', color: '#4cc9f0' },
   glove:  { n: ['퍽!', '퍽!', '퍼벅!', '팍!'], strong: '퍽퍽퍽!!', last: '퍼버벅!!', color: '#d62828' },
 };
@@ -2101,14 +2105,15 @@ function bandRing(x, y, rx, ry, rot, color) {
   ctx.lineWidth = 3.5; ctx.strokeStyle = color; ctx.stroke();
   ctx.restore();
 }
-function ballAt(x, y, r, rot) {                                       // 피구공: 주황 공에 줄무늬
+function ballAt(x, y, r, rot) {                                       // 피구공: 빨간 고무공에 하얀 띠 (농구공 줄무늬 없이)
   ctx.save(); ctx.translate(x, y); ctx.rotate(rot);
-  ctx.beginPath(); ctx.arc(0, 0, r, 0, TAU); fs(col('#ff8c42'), 5);
-  ctx.lineWidth = 3.5; ctx.strokeStyle = OUT; ctx.beginPath();
-  ctx.moveTo(-r, 0); ctx.quadraticCurveTo(0, r * 0.35, r, 0); ctx.moveTo(0, -r); ctx.quadraticCurveTo(r * 0.45, 0, 0, r);
-  ctx.moveTo(-r * 0.7, -r * 0.7); ctx.quadraticCurveTo(-r * 0.2, -r * 0.2, -r * 0.7, r * 0.7);
-  ctx.stroke();
-  ctx.fillStyle = 'rgba(255,255,255,0.5)'; ctx.beginPath(); ctx.ellipse(-r * 0.4, -r * 0.45, r * 0.22, r * 0.13, -0.6, 0, TAU); ctx.fill();
+  ctx.beginPath(); ctx.arc(0, 0, r, 0, TAU); fs(col('#e63946'), 5);
+  ctx.save(); ctx.beginPath(); ctx.arc(0, 0, r - 2, 0, TAU); ctx.clip();
+  ctx.fillStyle = col('#ffffff'); ctx.fillRect(-r, -r * 0.24, r * 2, r * 0.48);            // 가운데 흰 띠
+  ctx.strokeStyle = OUT; ctx.lineWidth = 3; ctx.beginPath();
+  ctx.moveTo(-r, -r * 0.24); ctx.lineTo(r, -r * 0.24); ctx.moveTo(-r, r * 0.24); ctx.lineTo(r, r * 0.24); ctx.stroke();
+  ctx.restore();
+  ctx.fillStyle = 'rgba(255,255,255,0.55)'; ctx.beginPath(); ctx.ellipse(-r * 0.4, -r * 0.5, r * 0.2, r * 0.12, -0.6, 0, TAU); ctx.fill();
   ctx.restore();
 }
 function drawBalls() {                                                // 맞고 튕겨 나가는 공
