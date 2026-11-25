@@ -203,6 +203,10 @@
   #topbtns { position: absolute; left: 10px; right: 10px; top: max(10px, env(safe-area-inset-top)); z-index: 25; display: flex; justify-content: space-between; align-items: flex-start; pointer-events: none; }
   #topbtns button { pointer-events: auto; font-size: 18px; padding: 8px 14px; }
   #btns { display: flex; gap: 8px; }
+  .ic { display: inline-block; width: 28px; height: 28px; vertical-align: middle; font-style: normal; }
+  .ic svg { width: 100%; height: 100%; display: block; overflow: visible; filter: drop-shadow(0 2px 0 rgba(59,36,22,0.25)); }
+  #topbtns button { display: inline-flex; align-items: center; gap: 2px; padding: 6px 12px; }
+  .setcard button { display: flex; align-items: center; justify-content: center; gap: 8px; }
   @media (orientation: landscape) and (min-width: 701px) { #topbtns { justify-content: flex-end; gap: 8px; } }
   .setov { z-index: 60; background: rgba(20,10,35,0.6); display: flex; align-items: center; justify-content: center; }
   .setov.hidden { display: none; }
@@ -242,9 +246,9 @@
 <div id="stage">
   <canvas id="cv"></canvas>
   <div id="topbtns">
-    <button id="btnNav" title="뒤로 가기" aria-label="뒤로 가기">←<span class="tx"> 뒤로</span></button>
+    <button id="btnNav" title="뒤로 가기" aria-label="뒤로 가기"><i class="ic" data-ic="back"></i><span class="tx"> 뒤로</span></button>
     <div id="btns">
-      <button id="btnGear" title="설정" aria-label="설정">⚙️<span class="tx"> 설정</span></button>
+      <button id="btnGear" title="설정" aria-label="설정"><i class="ic" data-ic="gear"></i><span class="tx"> 설정</span></button>
       <button id="btnPanel" title="관리자 모드: 손맛 조절과 소리 고르기"><span>🔧</span><span class="tx" id="panelTx"> 관리자</span></button>
     </div>
   </div>
@@ -258,10 +262,10 @@
 
   <div id="setOv" class="ov setov hidden">
     <div class="card setcard">
-      <h2>⚙️ 설정</h2>
-      <button id="btnMute"><span id="muteIc">🔊</span><span id="muteTx"> 소리 켜짐</span></button>
-      <button id="btnVib"><span id="vibIc">📳</span><span id="vibTx"> 진동: 중</span></button>
-      <button id="btnHome">🏠 처음 화면으로</button>
+      <h2><i class="ic" data-ic="gear"></i> 설정</h2>
+      <button id="btnMute"><i class="ic" id="muteIc" data-ic="snd"></i><span id="muteTx"> 소리 켜짐</span></button>
+      <button id="btnVib"><i class="ic" id="vibIc" data-ic="vib"></i><span id="vibTx"> 진동: 중</span></button>
+      <button id="btnHome"><i class="ic" data-ic="home"></i> 처음 화면으로</button>
       <button id="btnSetClose" class="big">계속하기</button>
     </div>
   </div>
@@ -2542,7 +2546,7 @@ function drawHud() {
   ctx.restore();
   if (st.started && !st.done && st.toolHits[st.tool] === 0) {         // 고른 도구로 아직 못 맞혔으면 쓰는 법을 알려 준다
     const b = 1 + Math.sin(performance.now() / 180) * 0.04;
-    ctx.save(); ctx.translate(doll.x, V.w < 700 ? 172 : 118); ctx.scale(b, b);
+    ctx.save(); ctx.translate(doll.x, V.w < 700 ? 146 : 118); ctx.scale(b, b);
     txt(HINT[st.tool], 0, 0, 28, '#ffffff', 7); ctx.restore();
   }
 }
@@ -2807,15 +2811,28 @@ function showPicked(open) {
 /* =====================================================================
    10. 버튼과 시작
    ===================================================================== */
+const SVGI = i => '<svg viewBox="0 0 32 32" stroke="#3b2416" stroke-width="2.6" stroke-linejoin="round" stroke-linecap="round">' + i + '</svg>';
+const SPK = '<path d="M5 12 H10 L17 6 V26 L10 20 H5 Z" fill="#7ec8ff"/>';
+const ICONS = {
+  back: SVGI('<path d="M16 5 L3 16 L16 27 V20 H29 V12 H16 Z" fill="#ffd23f"/><path d="M14 10 L8 16" stroke="#fff" stroke-width="2" fill="none"/>'),
+  gear: SVGI('<g fill="#b9c6e4">' + [0,1,2,3,4,5,6,7].map(k => '<rect x="12.5" y="2" width="7" height="9" rx="2.5" transform="rotate(' + k * 45 + ' 16 16)"/>').join('') + '</g><circle cx="16" cy="16" r="10" fill="#b9c6e4"/><circle cx="16" cy="16" r="4" fill="#fff6e0"/><path d="M10 12 A8 8 0 0 1 15 8" stroke="#fff" stroke-width="2" fill="none"/>'),
+  snd: SVGI(SPK + '<path d="M21 12 Q24 16 21 20 M24.5 8.5 Q30 16 24.5 23.5" fill="none"/>'),
+  sndOff: SVGI(SPK + '<path d="M21 11 L29 21 M29 11 L21 21" stroke="#e63946" stroke-width="3.2" fill="none"/>'),
+  vib: SVGI('<rect x="10" y="3" width="12" height="26" rx="3.5" fill="#b79cff"/><circle cx="16" cy="25" r="1.4" fill="#3b2416"/><path d="M5 11 Q3 16 5 21 M27 11 Q29 16 27 21" fill="none"/>'),
+  vibOff: SVGI('<rect x="10" y="3" width="12" height="26" rx="3.5" fill="#b79cff"/><circle cx="16" cy="25" r="1.4" fill="#3b2416"/><path d="M4 4 L28 28" stroke="#e63946" stroke-width="3.2" fill="none"/>'),
+  home: SVGI('<path d="M5 15 L16 5 L27 15 V28 H5 Z" fill="#ffd9a0"/><path d="M2 16 L16 3 L30 16" fill="none" stroke-width="3"/><rect x="13" y="18" width="7" height="10" rx="1.5" fill="#e63946"/>')
+};
+function setIc(el, name) { el.innerHTML = ICONS[name]; }
+document.querySelectorAll('.ic[data-ic]').forEach(e => setIc(e, e.dataset.ic));
 const btnMute = document.getElementById('btnMute'), btnPanel = document.getElementById('btnPanel');
 let vibLvl = 2;                                          // 0 꺼짐 · 1 약 · 2 중 · 3 강
 try { const v = localStorage.getItem('sokpuri_vib2'); if (v !== null) vibLvl = Math.max(0, Math.min(3, +v | 0)); } catch (e) {}
 const VIB_NAME = ['꺼짐', '약', '중', '강'], VIB_MUL = [0, 0.6, 1, 1.9];
 function vibrate(p) { if (!vibLvl || !navigator.vibrate) return; try { navigator.vibrate(Array.isArray(p) ? p.map(v => Math.round(v * VIB_MUL[vibLvl])) : Math.round(p * VIB_MUL[vibLvl])); } catch (e) {} }
 function showSettings() {
-  document.getElementById('muteIc').textContent = muted ? '🔇' : '🔊';
+  setIc(document.getElementById('muteIc'), muted ? 'sndOff' : 'snd');
   document.getElementById('muteTx').textContent = muted ? ' 소리 꺼짐' : ' 소리 켜짐';
-  document.getElementById('vibIc').textContent = vibLvl ? '📳' : '📴';
+  setIc(document.getElementById('vibIc'), vibLvl ? 'vib' : 'vibOff');
   document.getElementById('vibTx').textContent = ' 진동: ' + VIB_NAME[vibLvl];
 }
 btnMute.addEventListener('click', () => { muted = !muted; applyVolume(); showSettings(); });
