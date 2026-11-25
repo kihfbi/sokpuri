@@ -107,7 +107,6 @@
     border-color: #e8b83a; background: linear-gradient(#8a5cc8, #4f2c86); box-shadow: inset 0 3px 0 rgba(255,255,255,0.28), 0 5px 0 #1c0a38, 0 9px 14px rgba(0,0,0,0.4); }
   .kbtn:active { transform: translateY(4px); }
   .kbtn.hidden { display: none; }
-  body[data-scr="start"] #bar { display: none; }
   /* 가로 화면: 로고는 왼쪽, 이름 판은 오른쪽으로 비켜서 가운데 그림(인형·도구)이 보이게 한다 */
   @media (orientation: landscape) and (min-width: 600px) {
     .ov.title { flex-direction: row; justify-content: space-between; align-items: center; padding-left: max(4vw, env(safe-area-inset-left)); padding-right: max(4vw, env(safe-area-inset-right)); }
@@ -170,6 +169,15 @@
   #picked { width: 100%; height: 150px; margin-top: 8px; font: inherit; font-size: 13px; display: none;
             border: 2px solid #3b2416; border-radius: 10px; padding: 6px; background: #fff; }
 
+  .setov { z-index: 60; background: rgba(20,10,35,0.6); display: flex; align-items: center; justify-content: center; }
+  .setov.hidden { display: none; }
+  .setcard { width: min(86vw, 340px); display: flex; flex-direction: column; gap: 12px; text-align: center; }
+  .setcard h2 { margin: 0 0 2px; font-size: 24px; }
+  .setcard button { font-size: 18px; padding: 12px 14px; }
+  body[data-scr="start"] #btnNav { display: none; }
+  body[data-scr="start"] #bar { z-index: 70; }
+  body[data-scr="start"] #tools { display: none; }
+
   @media (max-width: 820px), (orientation: portrait) {
     body { flex-direction: column; }
     #stage { flex: 1; width: 100%; height: auto; min-height: 0; }
@@ -204,8 +212,19 @@
       <button data-tool="band" title="누른 채 뒤로 당겼다 놓기">➰ 고무줄</button>
     </div>
     <div id="btns">
-      <button id="btnMute"><span id="muteIc">🔊</span><span class="tx" id="muteTx"> 소리 켜짐</span></button>
+      <button id="btnNav" title="뒤로 가기" aria-label="뒤로 가기">←<span class="tx"> 뒤로</span></button>
+      <button id="btnGear" title="설정" aria-label="설정">⚙️<span class="tx"> 설정</span></button>
       <button id="btnPanel" title="관리자 모드: 손맛 조절과 소리 고르기"><span>🔧</span><span class="tx" id="panelTx"> 관리자</span></button>
+    </div>
+  </div>
+
+  <div id="setOv" class="ov setov hidden">
+    <div class="card setcard">
+      <h2>⚙️ 설정</h2>
+      <button id="btnMute"><span id="muteIc">🔊</span><span id="muteTx"> 소리 켜짐</span></button>
+      <button id="btnVib"><span id="vibIc">📳</span><span id="vibTx"> 진동: 중</span></button>
+      <button id="btnHome">🏠 처음 화면으로</button>
+      <button id="btnSetClose" class="big">계속하기</button>
     </div>
   </div>
 
@@ -1316,6 +1335,7 @@ function hit(x, y, s, part, o) {
   } else {                                                         //    옆에서 맞으면 맞은 쪽으로 휘청
     doll.rotV += (o.dx >= 0 ? 1 : -1) * (side ? 1 : 0.4) * [1.6, 3.0, 5.0][fx];
   }
+  vibrate(crit ? [30, 20, 50] : last ? 70 : [12, 22, 40][fx]);
   flashT = cfg.flash;                                              // ⑥ 흰 번쩍임
   const drop = vert ? squashDrop(y) : 0;                           //    눌린 만큼 내려간 자리에서 터진다
   if (vert) ham.stuck = true;
@@ -2744,10 +2764,35 @@ function showPicked(open) {
    10. 버튼과 시작
    ===================================================================== */
 const btnMute = document.getElementById('btnMute'), btnPanel = document.getElementById('btnPanel');
-btnMute.addEventListener('click', () => {
-  muted = !muted; applyVolume();
+let vibLvl = 2;                                          // 0 꺼짐 · 1 약 · 2 중 · 3 강
+try { const v = localStorage.getItem('sokpuri_vib2'); if (v !== null) vibLvl = Math.max(0, Math.min(3, +v | 0)); } catch (e) {}
+const VIB_NAME = ['꺼짐', '약', '중', '강'], VIB_MUL = [0, 0.6, 1, 1.9];
+function vibrate(p) { if (!vibLvl || !navigator.vibrate) return; try { navigator.vibrate(Array.isArray(p) ? p.map(v => Math.round(v * VIB_MUL[vibLvl])) : Math.round(p * VIB_MUL[vibLvl])); } catch (e) {} }
+function showSettings() {
   document.getElementById('muteIc').textContent = muted ? '🔇' : '🔊';
   document.getElementById('muteTx').textContent = muted ? ' 소리 꺼짐' : ' 소리 켜짐';
+  document.getElementById('vibIc').textContent = vibLvl ? '📳' : '📴';
+  document.getElementById('vibTx').textContent = ' 진동: ' + VIB_NAME[vibLvl];
+}
+btnMute.addEventListener('click', () => { muted = !muted; applyVolume(); showSettings(); });
+document.getElementById('btnVib').addEventListener('click', () => {
+  vibLvl = (vibLvl + 1) % 4; try { localStorage.setItem('sokpuri_vib2', String(vibLvl)); } catch (e) {}
+  vibrate(60);
+  showSettings();
+});
+const setOv = document.getElementById('setOv');
+document.getElementById('btnGear').addEventListener('click', () => { audioOn(); showSettings(); setOv.classList.remove('hidden'); });
+document.getElementById('btnSetClose').addEventListener('click', () => setOv.classList.add('hidden'));
+setOv.addEventListener('click', e => { if (e.target === setOv) setOv.classList.add('hidden'); });
+function goScreen(n) {                                   // 화면을 바꾸며 끝 카드·설정 창을 닫는다
+  setOv.classList.add('hidden'); document.getElementById('endOv').classList.add('hidden'); setScreen(n);
+}
+function leaveOk() { return !(screen === 'play' && st.started && !st.done) || confirm('지금 판을 그만둘까요? 게이지는 처음부터 다시 시작해요.'); }
+document.getElementById('btnHome').addEventListener('click', () => { if (leaveOk()) goScreen('start'); });
+document.getElementById('btnNav').addEventListener('click', () => {
+  if (screen === 'make') goScreen('start');
+  else if (screen === 'summon') goScreen('make');
+  else if (screen === 'play' && leaveOk()) goScreen('summon');
 });
 function setPanel(open) {                       // 관리자 모드 열기·닫기 (열 때마다 닫힌 채로 시작한다. 기억하지 않는다)
   adminOpen = open;
