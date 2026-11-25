@@ -200,13 +200,17 @@
   #picked { width: 100%; height: 150px; margin-top: 8px; font: inherit; font-size: 13px; display: none;
             border: 2px solid #3b2416; border-radius: 10px; padding: 6px; background: #fff; }
 
+  #topbtns { position: absolute; left: 10px; right: 10px; top: max(10px, env(safe-area-inset-top)); z-index: 25; display: flex; justify-content: space-between; align-items: flex-start; pointer-events: none; }
+  #topbtns button { pointer-events: auto; font-size: 18px; padding: 8px 14px; }
+  #btns { display: flex; gap: 8px; }
+  @media (orientation: landscape) and (min-width: 701px) { #topbtns { justify-content: flex-end; gap: 8px; } }
   .setov { z-index: 60; background: rgba(20,10,35,0.6); display: flex; align-items: center; justify-content: center; }
   .setov.hidden { display: none; }
   .setcard { width: min(86vw, 340px); display: flex; flex-direction: column; gap: 12px; text-align: center; }
   .setcard h2 { margin: 0 0 2px; font-size: 24px; }
   .setcard button { font-size: 18px; padding: 12px 14px; }
-  body[data-scr="start"] #btnNav { display: none; }
-  body[data-scr="start"] #bar { z-index: 70; }
+  body[data-scr="start"] #btnNav { visibility: hidden; }
+  body[data-scr="start"] #topbtns { z-index: 70; }
   body[data-scr="start"] #tools { display: none; }
 
   @media (max-width: 820px), (orientation: portrait) {
@@ -223,7 +227,7 @@
     body:not([data-scr="play"]) #tools { display: none; }
     .pn { display: inline; }
 
-    #btns .tx { display: none; }
+    #btns .tx, #btnNav .tx { display: none; }
     .ov { position: fixed; }                 /* 좁은 화면에서는 시작·끝 카드가 화면 전체를 덮는다 */
     .ov.side { inset: auto 0 0 0; max-height: 62vh; background: transparent; pointer-events: none; justify-content: center; align-items: flex-end; padding: 0 8px 8px; }
     .ov.side .card { width: 100%; max-height: 62vh; }
@@ -237,16 +241,18 @@
 
 <div id="stage">
   <canvas id="cv"></canvas>
+  <div id="topbtns">
+    <button id="btnNav" title="뒤로 가기" aria-label="뒤로 가기">←<span class="tx"> 뒤로</span></button>
+    <div id="btns">
+      <button id="btnGear" title="설정" aria-label="설정">⚙️<span class="tx"> 설정</span></button>
+      <button id="btnPanel" title="관리자 모드: 손맛 조절과 소리 고르기"><span>🔧</span><span class="tx" id="panelTx"> 관리자</span></button>
+    </div>
+  </div>
   <div id="bar">
     <div id="tools">
       <button data-tool="hammer" class="on" title="인형을 누르기">🔨 뿅망치</button>
       <button data-tool="pot" title="누른 채 휘둘러 스치기">🪰 파리채</button>
       <button data-tool="band" title="누른 채 뒤로 당겼다 놓기">➰ 고무줄</button>
-    </div>
-    <div id="btns">
-      <button id="btnNav" title="뒤로 가기" aria-label="뒤로 가기">←<span class="tx"> 뒤로</span></button>
-      <button id="btnGear" title="설정" aria-label="설정">⚙️<span class="tx"> 설정</span></button>
-      <button id="btnPanel" title="관리자 모드: 손맛 조절과 소리 고르기"><span>🔧</span><span class="tx" id="panelTx"> 관리자</span></button>
     </div>
   </div>
 
@@ -2312,7 +2318,7 @@ function drawBand() {
 /* "네 말이 다 맞았어" 사과: 위에서 현수막이 스르륵 펼쳐진다 */
 function drawBanner() {
   if (!(ap.on && ap.kind === 2) || doll.hold <= 0.01) return;
-  const k = doll.hold, x = V.x + V.w / 2, w = Math.min(500, V.w - 24), y0 = V.w < 700 ? 40 : 96, bh = 100, h = bh * k;
+  const k = doll.hold, x = V.x + V.w / 2, w = Math.min(500, V.w - 24), y0 = V.w < 700 ? 110 : 96, bh = 100, h = bh * k;
   ctx.save();
   ctx.strokeStyle = OUT; ctx.lineWidth = 4; ctx.beginPath(); ctx.moveTo(x - w / 2 + 30, V.y); ctx.lineTo(x - w / 2 + 30, y0); ctx.moveTo(x + w / 2 - 30, V.y); ctx.lineTo(x + w / 2 - 30, y0); ctx.stroke();
   ctx.beginPath(); ctx.rect(V.x - 20, V.y - 20, V.w + 40, y0 - V.y + h + 20); ctx.clip();
@@ -2497,7 +2503,7 @@ function drawHud() {
   const narrow = V.w < 700;
   ctx.save(); ctx.translate(V.x, V.y);                                 // 게이지·연타 글자는 보이는 화면 기준 자리에 그린다
   const pct = clamp(st.shown / cfg.gaugeTotal, 0, 1);
-  const x = narrow ? 112 : 190, y = 22, h = 28, w = V.w - x - (narrow ? 62 : 240);
+  const x = narrow ? 112 : 190, y = narrow ? 76 : 22, h = 28, w = V.w - x - (narrow ? 62 : 240);
   rr(x - 5, y - 5, w + 10, h + 10, 19); ctx.fillStyle = OUT; ctx.fill();
   rr(x, y, w, h, 14); ctx.fillStyle = '#fff6e0'; ctx.fill();
   if (pct > 0.005) {
@@ -2519,7 +2525,7 @@ function drawHud() {
     const pop = comboFx.pop < 0.12 ? 1.35 - 0.35 * (comboFx.pop / 0.12) : 1;
     const c = n >= 30 ? '#ff4d6d' : n >= 20 ? '#ff7b2e' : n >= 10 ? '#ff9f1c' : '#ffe14d';
     ctx.save(); ctx.globalAlpha = clamp(comboFx.fade, 0, 1);
-    ctx.translate(narrow ? 100 : 160, 200); ctx.rotate(-0.09); ctx.scale(pop, pop);
+    ctx.translate(narrow ? 100 : 160, narrow ? 262 : 200); ctx.rotate(-0.09); ctx.scale(pop, pop);
     txt(n + '연타!', 0, 0, size, c, 9);
     if (st.combo > 0) {
       const left = clamp(1 - (performance.now() / 1000 - st.lastHit) / cfg.comboWindow, 0, 1);
@@ -2536,7 +2542,7 @@ function drawHud() {
   ctx.restore();
   if (st.started && !st.done && st.toolHits[st.tool] === 0) {         // 고른 도구로 아직 못 맞혔으면 쓰는 법을 알려 준다
     const b = 1 + Math.sin(performance.now() / 180) * 0.04;
-    ctx.save(); ctx.translate(doll.x, 118); ctx.scale(b, b);
+    ctx.save(); ctx.translate(doll.x, V.w < 700 ? 172 : 118); ctx.scale(b, b);
     txt(HINT[st.tool], 0, 0, 28, '#ffffff', 7); ctx.restore();
   }
 }
