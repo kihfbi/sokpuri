@@ -321,7 +321,7 @@
       <button id="btnRedo" class="kbtn wood hidden">그 녀석 다시 부르기</button>
       <p class="small">"시작"을 누르면 소리가 켜져요 · 폰은 가로로 돌리면 더 크게 보여요</p>
     </div>
-    <div class="ver">v0.6.0 beta &nbsp;·&nbsp; build <span id="buildId">20261127-0313</span> &nbsp;·&nbsp; &copy; SY INHOVATION</div>
+    <div class="ver">v0.6.0 beta &nbsp;·&nbsp; build <span id="buildId">20261127-0841</span> &nbsp;·&nbsp; &copy; SY INHOVATION</div>
   </div>
 
   <div id="warp" aria-hidden="true"><div class="ring"></div><div class="wtx"></div></div>
@@ -1099,7 +1099,9 @@ function fit() {
   const dpr = Math.min(window.devicePixelRatio || 1, 2);
   cv.width = Math.round(cw * dpr); cv.height = Math.round(ch * dpr);
   view = cv.width / V.w;
-  if (ready) draw();                       // 크기가 바뀌면 바로 다시 그린다 (빈 화면이 번쩍이지 않게)
+  const tb = document.getElementById('topbtns');   // 폰: 반성 게이지는 뒤로·설정 단추 아래로 충분히 내려서 그린다 (노치 높이가 폰마다 달라 단추 자리를 재서 정한다)
+  V.hudY = V.w < 700 ? Math.max(76, (tb.offsetTop + tb.offsetHeight + 34) * V.w / cw) : 22;
+  if (ready) draw();                      // 크기가 바뀌면 바로 다시 그린다 (빈 화면이 번쩍이지 않게)
 }
 let ready = false;
 window.addEventListener('resize', fit);
@@ -2832,7 +2834,7 @@ function drawHud() {
   const narrow = V.w < 700;
   ctx.save(); ctx.translate(V.x, V.y);                                 // 게이지·연타 글자는 보이는 화면 기준 자리에 그린다
   const pct = clamp(st.shown / cfg.gaugeTotal, 0, 1);
-  const x = narrow ? 112 : 190, y = narrow ? 76 : 22, h = 28, w = V.w - x - (narrow ? 62 : 240);
+  const x = narrow ? 112 : 190, y = V.hudY, h = 28, w = V.w - x - (narrow ? 62 : 240);
   rr(x - 5, y - 5, w + 10, h + 10, 19); ctx.fillStyle = OUT; ctx.fill();
   rr(x, y, w, h, 14); ctx.fillStyle = '#fff6e0'; ctx.fill();
   if (pct > 0.005) {
@@ -2851,12 +2853,12 @@ function drawHud() {
   txt('📍 ' + PLACES[pick.place] + '  ·  🎯 ' + WISHES[pick.wish], x, y + h + 24, 16, '#ffffff', 5, 'left');   // 고른 장소와 원하는 것 (사과·배경은 5단계에서 달라진다)
   ctx.globalAlpha = 0.9;
   if (adminOpen)                               // 집계 줄은 관리자 모드를 열었을 때만 보인다 (플레이어 화면에는 게이지만)
-    txt('때린 횟수 ' + st.hits + ' · 총 데미지 ' + st.totalDmg.toLocaleString('ko-KR'), 16, 104, 17, '#ffffff', 5, 'left');
+    txt('때린 횟수 ' + st.hits + ' · 총 데미지 ' + st.totalDmg.toLocaleString('ko-KR'), 16, y + 82, 17, '#ffffff', 5, 'left');
   ctx.globalAlpha = 1;
   ctx.restore();
   if (st.started && !st.done && st.toolHits[st.tool] === 0) {         // 고른 도구로 아직 못 맞혔으면 쓰는 법을 알려 준다
     const b = 1 + Math.sin(performance.now() / 180) * 0.04;
-    ctx.save(); ctx.translate(doll.x, V.w < 700 ? 146 : 118); ctx.scale(b, b);
+    ctx.save(); ctx.translate(doll.x, V.w < 700 ? Math.max(146, V.y + V.hudY + 90) : 118); ctx.scale(b, b);
     txt(HINT[st.tool], 0, 0, 28, '#ffffff', 7); ctx.restore();
   }
 }
@@ -2902,7 +2904,7 @@ function drawCritBanner() {
   ctx.save();
   ctx.globalAlpha = k > 0.75 ? (1 - k) / 0.25 : 1;
   const bs = Math.min(1, V.w / 700);
-  ctx.translate(V.x + V.w / 2, V.y + (V.w < 700 ? 150 : 132)); ctx.rotate(-0.05); ctx.scale(sc * bs, sc * bs);   // 데미지 숫자를 가리지 않게 위쪽 가운데에 둔다
+  ctx.translate(V.x + V.w / 2, V.y + (V.w < 700 ? Math.max(150, V.hudY + 110) : 132)); ctx.rotate(-0.05); ctx.scale(sc * bs, sc * bs);   // 데미지 숫자를 가리지 않게 위쪽 가운데에 둔다
   ctx.font = font(104); ctx.textAlign = 'center'; ctx.textBaseline = 'middle'; ctx.lineJoin = 'round';
   ctx.lineWidth = 26; ctx.strokeStyle = '#7a3b00'; ctx.strokeText('크리티컬!', 0, 0);
   ctx.lineWidth = 11; ctx.strokeStyle = '#ffffff'; ctx.strokeText('크리티컬!', 0, 0);
