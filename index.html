@@ -28,7 +28,6 @@
   html, body { height: 100%; margin: 0; overscroll-behavior: none; -webkit-touch-callout: none; }
   body {
     display: flex; overflow: hidden; background: #2b2233; color: #3b2416;
-    padding: env(safe-area-inset-top) env(safe-area-inset-right) env(safe-area-inset-bottom) env(safe-area-inset-left);
     font-family: "Malgun Gothic", "Apple SD Gothic Neo", "Noto Sans KR", sans-serif;
     -webkit-tap-highlight-color: transparent;
   }
@@ -37,9 +36,9 @@
     display: flex; align-items: center; justify-content: center;
     user-select: none; -webkit-user-select: none;
   }
-  #cv { display: block; touch-action: none; cursor: pointer; border-radius: 10px; }
+  #cv { display: block; touch-action: none; cursor: pointer; }
   #bar {
-    position: absolute; left: 10px; right: 10px; bottom: 10px; z-index: 20; pointer-events: none;
+    position: absolute; left: max(10px, env(safe-area-inset-left)); right: max(10px, env(safe-area-inset-right)); bottom: max(10px, env(safe-area-inset-bottom)); z-index: 20; pointer-events: none;
     display: flex; flex-wrap: wrap-reverse; justify-content: space-between; align-items: flex-end; gap: 8px;
   }
   #bar > div { display: flex; gap: 8px; pointer-events: auto; }
@@ -55,7 +54,7 @@
   button.on { background: #ffd23f; }
   .ov {
     position: absolute; inset: 0; z-index: 10; display: flex; align-items: center; justify-content: center;
-    background: rgba(43, 34, 51, 0.78); padding: 16px;
+    background: rgba(43, 34, 51, 0.78); padding: max(16px, env(safe-area-inset-top)) max(16px, env(safe-area-inset-right)) max(16px, env(safe-area-inset-bottom)) max(16px, env(safe-area-inset-left));
   }
   .ov.hidden { display: none; }
   .card {
@@ -232,7 +231,7 @@
   #picked { width: 100%; height: 150px; margin-top: 8px; font: inherit; font-size: 13px; display: none;
             border: 2px solid #3b2416; border-radius: 10px; padding: 6px; background: #fff; }
 
-  #topbtns { position: absolute; left: 10px; right: 10px; top: max(10px, env(safe-area-inset-top)); z-index: 25; display: flex; justify-content: space-between; align-items: flex-start; pointer-events: none; }
+  #topbtns { position: absolute; left: max(10px, env(safe-area-inset-left)); right: max(10px, env(safe-area-inset-right)); top: max(10px, env(safe-area-inset-top)); z-index: 25; display: flex; justify-content: space-between; align-items: flex-start; pointer-events: none; }
   #topbtns button { pointer-events: auto; font-size: 18px; padding: 8px 14px; }
   #btns { display: flex; gap: 8px; }
   .ic { display: inline-block; width: 28px; height: 28px; vertical-align: middle; font-style: normal; }
@@ -265,7 +264,7 @@
 
     #btns .tx, #btnNav .tx { display: none; }
     .ov { position: fixed; }                 /* 좁은 화면에서는 시작·끝 카드가 화면 전체를 덮는다 */
-    .ov.side { inset: auto 0 0 0; max-height: 62vh; background: transparent; pointer-events: none; justify-content: center; align-items: flex-end; padding: 0 8px 8px; }
+    .ov.side { inset: auto 0 0 0; max-height: 62vh; background: transparent; pointer-events: none; justify-content: center; align-items: flex-end; padding: 0 8px max(8px, env(safe-area-inset-bottom)); }
     .ov.side .card { width: 100%; max-height: 62vh; }
     .card { padding: 18px 20px; }
     .card h1 { font-size: 30px; }
@@ -321,7 +320,7 @@
       <button id="btnRedo" class="kbtn wood hidden">그 녀석 다시 부르기</button>
       <p class="small">"시작"을 누르면 소리가 켜져요 · 폰은 가로로 돌리면 더 크게 보여요</p>
     </div>
-    <div class="ver">v0.6.0 beta &nbsp;·&nbsp; build <span id="buildId">20261127-0841</span> &nbsp;·&nbsp; &copy; SY INHOVATION</div>
+    <div class="ver">v0.6.0 beta &nbsp;·&nbsp; build <span id="buildId">20261127-1653</span> &nbsp;·&nbsp; &copy; SY INHOVATION</div>
   </div>
 
   <div id="warp" aria-hidden="true"><div class="ring"></div><div class="wtx"></div></div>
@@ -1091,9 +1090,9 @@ function fit() {
     V.x = 430 - V.w / 2; V.y = 520 - footAt * V.h;
     cw = Math.floor(r.width); ch = Math.floor(r.height);
   } else {
-    V.x = 0; V.y = 0; V.w = W; V.h = H;
-    const sc = Math.max(0.1, Math.min(r.width / W, r.height / H));
-    cw = Math.floor(W * sc); ch = Math.floor(H * sc);
+    const rw = r.width || W, rh = r.height || H, sc = Math.max(0.1, Math.min(rw / W, rh / H));
+    V.w = rw / sc; V.h = rh / sc; V.x = (W - V.w) / 2; V.y = (H - V.h) / 2;     // 세계 900x600은 가운데, 남는 곳은 배경이 채운다
+    cw = Math.floor(rw); ch = Math.floor(rh);
   }
   cv.style.width = cw + 'px'; cv.style.height = ch + 'px';
   const dpr = Math.min(window.devicePixelRatio || 1, 2);
@@ -3518,7 +3517,20 @@ window.__sok = {
   drawBg = function () {
     const pl = (screen === 'play' || screen === 'summon') ? pick.place : -1;
     const sb = BGS[Math.max(0, pl)];
-    if (sb && sb.complete && sb.naturalWidth) { ctx.drawImage(sb, -40, -40, W + 80, H + 80); return; }
+    if (sb && sb.complete && sb.naturalWidth) {
+      const sw = sb.naturalWidth, sh = sb.naturalHeight, L = -40, T = -40, BW = W + 80, ky = (H + 80) / sh;
+      const cut = Math.round(sh * 0.8), floorY = T + cut * ky;                          // 가구 다리 아래부터가 바닥
+      const top = Math.min(T, V.y - 40), bottom = Math.max(T + sh * ky, V.y + V.h + 40);
+      const one = () => {
+        if (top < T) ctx.drawImage(sb, 0, 1, sw, 1, L, top, BW, T - top + 1);
+        ctx.drawImage(sb, 0, 0, sw, cut, L, T, BW, cut * ky + 1);
+        ctx.drawImage(sb, 0, cut, sw, sh - 8 - cut, L, floorY, BW, bottom - floorY);   // 그림 맨 아래 어두운 테두리(8px)는 뺀다
+      };
+      one();
+      for (const [need, edge] of [[V.x - 40 < L, L], [V.x + V.w + 40 > L + BW, L + BW]])
+        if (need) { ctx.save(); ctx.translate(2 * edge, 0); ctx.scale(-1, 1); one(); ctx.restore(); }
+      return;
+    }
     baseDrawBg();
   };
   font = function (size) { return '400 ' + size + 'px "SkinJua","Malgun Gothic","Apple SD Gothic Neo","Noto Sans KR",sans-serif'; };
